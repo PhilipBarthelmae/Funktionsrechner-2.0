@@ -270,18 +270,16 @@ namespace Funktionsrechner_2._0
             {
                 lb = Convert.ToDouble(textBox18.Text);
                 ub = Convert.ToDouble(textBox17.Text);
+                if (lb > ub || lb == ub)
+                {   //dürfen nicht gleich sein und müssen in der RIchtigen Reihenfolge sein
+                    return false;
+                }
             }
             catch (Exception)
             {
-                showAreaInputError();
                 return false;
             }   
-            if (lb > ub || lb == ub)
-            {   //dürfen nicht gleich sein und müssen in der RIchtigen Reihenfolge sein
-                showAreaInputError();
-                return false;
-            }
-            else return true;
+            return true;
         }
 
         /// <summary>
@@ -404,7 +402,6 @@ namespace Funktionsrechner_2._0
 
         private void radioButton4_CheckedChanged(object sender, EventArgs e) { setInputMode(2); }
         #endregion
-
 
         #region berechnungen
         private void button10_Click(object sender, EventArgs e) //Löschen von Funktionen
@@ -606,7 +603,7 @@ namespace Funktionsrechner_2._0
                     showFunctionSelectionError();
                 }
             }
-            if (getSelectedFunctionType() == "sine" || getSelectedFunctionType() == "cosine")
+            else if (getSelectedFunctionType() == "sine" || getSelectedFunctionType() == "cosine")
             {
                 if (index >= 0)
                 {
