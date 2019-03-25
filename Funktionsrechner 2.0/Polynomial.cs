@@ -298,27 +298,30 @@ namespace Funktionsrechner_2._0
 
         //GFS-Relevant
         #region GFS
-        /// <summary>
-        /// Überprüft ob das Interval schon gefunden wurde
-        /// </summary>
-        /// <param name="lb"></param>
-        /// <param name="ub"></param>
-        /// <returns></returns>
-        public bool checkIntervalAlreadyFound(double lb, double ub)
-        { //ub = upperBound & lb = lowerBound
-            Interval I = new Interval(lb, ub);
-            for (int i = 0; i < intervals.Length; i++)
-            {
-                if (I.lowerBound == intervals[i].lowerBound) 
-                {
-                    if (I.upperBound == intervals[i].upperBound)    
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
+
+        //TODO: noch mal drüberscheunen
+
+        ///// <summary>
+        ///// Überprüft ob das Interval schon gefunden wurde
+        ///// </summary>
+        ///// <param name="lb"></param>
+        ///// <param name="ub"></param>
+        ///// <returns></returns>
+        //public bool checkIntervalAlreadyFound(double lb, double ub)
+        //{ //ub = upperBound & lb = lowerBound
+        //    Interval I = new Interval(lb, ub);
+        //    for (int i = 0; i < intervals.Length; i++)
+        //    {
+        //        if (I.lowerBound == intervals[i].lowerBound)
+        //        {
+        //            if (I.upperBound == intervals[i].upperBound)
+        //            {
+        //                return true;
+        //            }
+        //        }
+        //    }
+        //    return false;
+        //}
 
         /// <summary>
         /// Gibt den Grad der Polynomfunktion zurück
@@ -399,7 +402,7 @@ namespace Funktionsrechner_2._0
         {
             for (double i = lb; i < ub; i += 0.5)
             {
-                if (checkVZW(i, i + 0.5) == true && checkIntervalAlreadyFound(i, i + 0.5) == false)
+                if (checkVZW(i, i + 0.5) == true) // && checkIntervalAlreadyFound(i, i + 0.5) == false
                 {
                     addIntervallEntry(i, i + 0.5);
                     additionalVZWfound = true;
@@ -449,7 +452,7 @@ namespace Funktionsrechner_2._0
             double estimate2; // Eine bessere Schätzung der nullstelle, die aus der ersten hervorgeht
             double middle = I.getIntervallAverage();
 
-            if (calculateYValue(middle) == 0) { addZero(middle); } //nullstelle schon gefunden
+            if (calculateYValue(middle) == 0) { addZero(Math.Round(middle,roundDigits)); } //nullstelle schon gefunden
             while (derivative.calculateYValue(middle) == 0) //Das Newton verfahren funktioniert nicht bei Steigung = 0
             {
                 middle += 0.00001; //Verschiebeung des Startwerts, sodass Verfahren funktioniert
@@ -567,8 +570,9 @@ namespace Funktionsrechner_2._0
                         Interval I = getInterval(zero);
                         //wenn ein fehler aufgetreten ist
                         if (I.lowerBound == -1 && I.upperBound == 1) return zeros; 
-                       
                         addIntervallEntry(I.lowerBound, I.upperBound);
+                        rightMostChecked = I.upperBound;
+                        leftMostChecked = I.lowerBound;
                         do
                         {
                             checkRightIntervals();

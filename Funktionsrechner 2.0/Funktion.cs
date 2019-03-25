@@ -12,7 +12,7 @@ namespace Funktionsrechner_2._0
         public int primeCount = 0;              //Anzahl der "Striche" einer Funktion (Grad der ableitung) zB .f' 
         public string name;                     //Name der Funktion
         public double[] zeros = new double[0];  //nullstellen
-        public int roundDigits = 3;             //auf wie viele nachkommastellen gerundet werden soll
+        public int roundDigits = 3;             //auf wie viele Nachkommastellen gerundet werden soll
         public Interval Middle = new Interval(-30, 30); //Mitte (Wird als erstes auf Nullstellen durchsucht)
         public double[] parameters;             //Parameter einer Funktion
         public int[] exponents;                 //Exponenten einer Funktion
