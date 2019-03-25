@@ -13,24 +13,22 @@ namespace Funktionsrechner_2._0
         public string name;                     //Name der Funktion
         public double[] zeros = new double[0];  //nullstellen
         public int roundDigits = 3;             //auf wie viele nachkommastellen gerundet werden soll
-        //TODO: Update Interval Middle
-        public Interval Middle = new Interval(-1, 1); //Mitte (Wird als erstes auf Nullstellen durchsucht)
-        public double[] parameters;
-        public int[] exponents;
-        //post-GFS
+        public Interval Middle = new Interval(-30, 30); //Mitte (Wird als erstes auf Nullstellen durchsucht)
+        public double[] parameters;             //Parameter einer Funktion
+        public int[] exponents;                 //Exponenten einer Funktion
+
         double[] extremeValues = new double[0];     //extremstellen
         double[] turnValues = new double[0];        //wendestellen
         public double[] maxima = new double[0];     //hochpunkte
         public double[] minima = new double[0];     //Tiefpunte
         public double[] turns = new double[0];     //wendepunkte
         public double[] saddles = new double[0];    //sattelpunkte
-        //post-GFS
 
         //Arrays für die Namensgebung / Erstellen des Strings
         public string[] smallLetters = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" };
         public string[] bigLetters = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
         public string[] superScript = { "⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹" };
-        public string[] subScript = { "₁", "₂", "₃", "₅", "₆", "₇", "₈", "₉" };
+        public string[] subScript = { "₁", "₂", "₃", "₄", "₅", "₆", "₇", "₈", "₉" };
 
         /// <summary>
         /// Erzeugt den Namenfür die nächste Ableitung
@@ -94,7 +92,6 @@ namespace Funktionsrechner_2._0
             }
             return newName;
         }
-
 
         /// <summary>
         /// Konstruktor
@@ -296,7 +293,6 @@ namespace Funktionsrechner_2._0
                     bool turningZeroFound = false; //Wendepunkt mit steigung null (Sattelpunkt)
                     for (int j = 0; j < zeroSlope.Length; j++)
                     {
-                        //TODO: turnValues[i] oder?
                         if (zeroSlope[j] == turnValues[i]) turningZeroFound = true;
                     }
                     if (turningZeroFound == true)
@@ -317,96 +313,69 @@ namespace Funktionsrechner_2._0
         /// <param name="lb"></param>
         /// <param name="ub"></param>
         /// <returns></returns>
-        public double calculateArea(double lb, double ub)
+        public virtual double calculateArea(double lb, double ub)
         {
-            //TODO: AddHopping() erstellen
-            if (getFunctionType() == "polynomial")
-            {   //lb = lower bound | ub = upper bound
-                double Area = 0;
-                Interval bounds = new Interval(lb, ub);
-                Function integral = createIntegral();
-                zeros = calculateZeros();
-                double[] relevantPoints = new double[0]; //enthält alle relevanten Nullstellen sowie Integrationsgrenzen
-                addArrayEntry(lb, ref relevantPoints);
-                addArrayEntry(ub, ref relevantPoints);
+            //Da der Code für Sin/Cos der gleiche und sehr lange ist lasse ich ihn einmal in der basisklase und überschreibe ihn
+            //für Polynomfunktionen
 
-                for (int i = 0; i < zeros.Length; i++) //Alle Nullstellen zwischen Integrationsgrenzen sind relevant
-                {
-                    if (zeros[i] > lb && zeros[i] < ub)
-                    {
-                        addArrayEntry(zeros[i], ref relevantPoints);
-                    }
-                }
-                Array.Sort(relevantPoints);
-                Array.Reverse(relevantPoints); //Von links nach rechts integrieren
+            //Erklärung zum Grobverfahren: (Ziel: Alle nullstellen zwischen den Integrationsgrenzen finden um dann Teilflächen berechnen zu können)
+            //es gilt lb = n +k*p ; also wenn man die die nullstelle k mal verschiebt gelangt man zur unteren Integrationsgrenze
+            //k wird dann auf die nächst kleinere Ganze Zahl gerundet um Rundungsfehler im weiteren verlauf zu vermeiden
+            //Dann wird geschaut ob die nullstelle n + k*p innerhlab der Integrationgrenzen liegt
+            //Wenn nicht, dann wird p draufaddiert. Wenn die nullstelle nun zwischen lb und ub liegt, wird solange p draufaddiert 
+            //und sich die Nullstellen gemerkt die Innerhalb lb und ub liegen, bis irgendwann ub überschritten wurde.
+            //nun hat man alle Vielfache der Nullstelle von n1 die innerhalb der Grenzen liegen. Nun gleiches verfahren mit n2 (mit Ausgangswert  n2 = n1+distance)
+            Function integral = createIntegral();
+            double Area = 0;
+            double a = parameters[0];
+            double b = parameters[1];
+            double c = parameters[2];
+            double d = parameters[3];
+            zeros = calculateZeros();
+            Array.Sort(zeros);
+            double[] relevantPoints = new double[0]; //enthält alle relevanten Nullstellen sowie Integrationsgrenzen
+            addArrayEntry(lb, ref relevantPoints);
+            addArrayEntry(ub, ref relevantPoints);
+            double period = Math.Abs(2 * Math.PI / b);
 
-                for (int i = 0; i < relevantPoints.Length - 1; i++) //Berechnen und Aufsummieren der Teilflächen
-                {
-                    Area += Math.Abs(integral.calculateYValue(relevantPoints[i + 1]) - integral.calculateYValue(relevantPoints[i]));
-                }
-                Area = Math.Round(Area, roundDigits);
-                return Area;
-            }
-            else
+            if (zeros.Length == 2)
             {
-                //Erklärung zum Grobverfahren: (Ziel: Alle nullstellen zwischen den Integrationsgrenzen finden um dann Teilflächen berechnen zu können)
-                //es gilt lb = n +k*p ; also wenn man die die nullstelle k mal verschiebt gelangt man zur unteren Integrationsgrenze
-                //k wird dann auf die nächst kleinere Ganze Zahl gerundet um Rundungsfehler im weiteren verlauf zu vermeiden
-                //Dann wird geschaut ob die nullstelle n + k*p innerhlab der Integrationgrenzen liegt
-                //Wenn nicht, dann wird p draufaddiert. Wenn die nullstelle nun zwischen lb und ub liegt, wird solange p draufaddiert 
-                //und sich die Nullstellen gemerkt die Innerhalb lb und ub liegen, bis irgendwann ub überschritten wurde.
-                //nun hat man alle Vielfache der Nullstelle von n1 die innerhalb der Grenzen liegen. Nun gleiches verfahren mit n2 (mit Ausgangswert  n2 = n1+distance)
-                Function integral = createIntegral();
-                double Area = 0;
-                double a = parameters[0];
-                double b = parameters[1];
-                double c = parameters[2];
-                double d = parameters[3];
-                zeros = calculateZeros();
-                Array.Sort(zeros);
-                double[] relevantPoints = new double[0]; //enthält alle relevanten Nullstellen sowie Integrationsgrenzen
-                addArrayEntry(lb, ref relevantPoints);
-                addArrayEntry(ub, ref relevantPoints);
-                double period = Math.Abs(2 * Math.PI / b);
+                double distance = Math.Abs(zeros[1] - zeros[0]);
+                double k; //lb = n + k * p also die nullstelle um k perioden verschoben
+                double estimate1; // der errechnete wert für lb
+                double estimate2;
+                k = Math.Floor((lb - zeros[0]) / period);
+                estimate1 = zeros[0] + k * period;
+                if (estimate1 < lb) estimate1 += period;
+                estimate2 = estimate1 + distance;
+                addHopping(estimate1, period, ub, ref relevantPoints);
+                addHopping(estimate2, period, ub, ref relevantPoints);
 
-                if (zeros.Length == 2)
-                {
-                    double distance = Math.Abs(zeros[1] - zeros[0]);
-                    double k; //lb = n + k * p also die nullstelle um k perioden verschoben
-                    double estimate1; // der errechnete wert für lb
-                    double estimate2;
-                    k = Math.Floor((lb - zeros[0]) / period);
-                    estimate1 = zeros[0] + k * period;
-                    if (estimate1 < lb) estimate1 += period;
-                    estimate2 = estimate1 + distance;
-                    addHopping(estimate1, period, ub, ref relevantPoints);
-                    addHopping(estimate2, period, ub, ref relevantPoints);
-
-                }
-                if (zeros.Length == 1)
-                {
-                    double k; //lb = n + k * p also die nullstelle um k perioden verschoben
-                    double estimate1; // der errechnete wert für lb
-                    k = Math.Floor((lb - zeros[0]) / period);
-                    estimate1 = zeros[0] + k * period;
-                    if (estimate1 < lb) estimate1 += period;
-                    if (estimate1 < ub)
-                    {
-                        addArrayEntry(estimate1, ref relevantPoints);
-                        addHopping(estimate1, period, ub, ref relevantPoints);
-                    }
-                }
-
-                Array.Sort(relevantPoints);
-                Array.Reverse(relevantPoints); //Von links nach rechts integrieren
-
-                for (int i = 0; i < relevantPoints.Length - 1; i++) //Aufsummieren und Berechnen der teilintervalle
-                {
-                    Area += Math.Abs(integral.calculateYValue(relevantPoints[i + 1]) - integral.calculateYValue(relevantPoints[i]));
-                }
-                Area = Math.Round(Area, roundDigits);
-                return Area;
             }
+            if (zeros.Length == 1)
+            {
+                double k; //lb = n + k * p also die nullstelle um k perioden verschoben
+                double estimate1; // der errechnete wert für lb
+                k = Math.Floor((lb - zeros[0]) / period);
+                estimate1 = zeros[0] + k * period;
+                if (estimate1 < lb) estimate1 += period;
+                if (estimate1 < ub)
+                {
+                    addArrayEntry(estimate1, ref relevantPoints);
+                    addHopping(estimate1, period, ub, ref relevantPoints);
+                }
+            }
+
+            Array.Sort(relevantPoints);
+            Array.Reverse(relevantPoints); //Von links nach rechts integrieren
+
+            for (int i = 0; i < relevantPoints.Length - 1; i++) //Aufsummieren und Berechnen der teilintervalle
+            {
+                Area += Math.Abs(integral.calculateYValue(relevantPoints[i + 1]) - integral.calculateYValue(relevantPoints[i]));
+            }
+            Area = Math.Round(Area, roundDigits);
+            return Area;
+
         }
 
         //Vorlagen für Kindklassen

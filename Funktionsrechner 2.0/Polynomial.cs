@@ -9,9 +9,11 @@ namespace Funktionsrechner_2._0
     class Polynomial:Function
     {
         //pulled from mother
+        double rightMostChecked;    //der letze Überprüfte Intervall rechts
+        double leftMostChecked;     //der letzte Überprüfte Intervall links
         public Interval[] intervals = new Interval[0];      //Intervalle in denen ein VZW gefunden wurde
         public bool additionalVZWfound = false;             //Weitere VZW außerhalb der Mitte[-30;30] gefunden?
-        // f(x) 0,1 -0,5    -0,5    2
+
         public Polynomial(double[] parameters, int[] exponents) //Konstruktor
         {
             this.parameters = parameters;
@@ -155,7 +157,11 @@ namespace Funktionsrechner_2._0
             {
                 if (parameters[i] != 0) //bei Null wird Komplettes Monom weggelassen
                 {
-                    if (parameters[i] == 1) //Die 1 wird vor dem x meist weggelassen
+                    if (parameters[i] == -1)//Die 1 wird vor dem x weggelassen
+                    {
+                        part2 += "-"; 
+                    }
+                    if (parameters[i] == 1) //Die 1 wird vor dem x weggelassen
                     {
                         part2 += "+ ";
                     }
@@ -165,7 +171,7 @@ namespace Funktionsrechner_2._0
                     }
                     else //Parameter ist kleiner Null
                     {
-                        part2 += Math.Round(parameters[i], 2);
+                        if (parameters[i] != -1) part2 += Math.Round(parameters[i], 2);
                     }
                     if (exponents[i] > 1) //Normaler Exponent
                     {
@@ -254,16 +260,52 @@ namespace Funktionsrechner_2._0
             else return true;
         }
 
+        /// <summary>
+        /// Berechnet die Fläche zwischen Graph und x-Achse zwischen 2 Grenzen
+        /// </summary>
+        /// <param name="lb"></param>
+        /// <param name="ub"></param>
+        /// <returns></returns>
+        public override double calculateArea(double lb, double ub)
+        {
+            //lb = lower bound | ub = upper bound
+            double Area = 0;
+            Interval bounds = new Interval(lb, ub);
+            Function integral = createIntegral();
+            zeros = calculateZeros();
+            double[] relevantPoints = new double[0]; //enthält alle relevanten Nullstellen sowie Integrationsgrenzen
+            addArrayEntry(lb, ref relevantPoints);
+            addArrayEntry(ub, ref relevantPoints);
+
+            for (int i = 0; i < zeros.Length; i++) //Alle Nullstellen zwischen Integrationsgrenzen sind relevant
+            {
+                if (zeros[i] > lb && zeros[i] < ub)
+                {
+                    addArrayEntry(zeros[i], ref relevantPoints);
+                }
+            }
+            Array.Sort(relevantPoints);
+            Array.Reverse(relevantPoints); //Von links nach rechts integrieren
+
+            for (int i = 0; i < relevantPoints.Length - 1; i++) //Berechnen und Aufsummieren der Teilflächen
+            {
+                Area += Math.Abs(integral.calculateYValue(relevantPoints[i + 1]) - integral.calculateYValue(relevantPoints[i]));
+            }
+            Area = Math.Round(Area, roundDigits);
+            return Area;
+        }
+
+
         //GFS-Relevant
         #region GFS
         /// <summary>
-        /// Überprüft ob der Interval schon gefunden wurde
+        /// Überprüft ob das Interval schon gefunden wurde
         /// </summary>
         /// <param name="lb"></param>
         /// <param name="ub"></param>
         /// <returns></returns>
         public bool checkIntervalAlreadyFound(double lb, double ub)
-        { //ub = upperBound || lb = lowerBound
+        { //ub = upperBound & lb = lowerBound
             Interval I = new Interval(lb, ub);
             for (int i = 0; i < intervals.Length; i++)
             {
@@ -290,7 +332,7 @@ namespace Funktionsrechner_2._0
         }
 
         /// <summary>
-        /// Fügt den Intervall (in dem ein VZW gefunden wurde) zum Array intervals[] hinzu
+        /// Fügt das Intervall (in dem ein VZW gefunden wurde) zum Array intervals[] hinzu
         /// </summary>
         /// <param name="x1"></param>
         /// <param name="x2"></param>
@@ -302,152 +344,50 @@ namespace Funktionsrechner_2._0
         }
 
         /// <summary>
-        /// Überpruft ob der Intervall in der Mitte[-30,30] liegt
-        /// </summary>
-        /// <param name="I"></param>
-        /// <returns></returns>
-        public bool checkIfIntervalIsInMiddle(Interval I)
-        {
-            if (I.lowerBound>= Middle.lowerBound && I.lowerBound < Middle.upperBound)
-            {
-                if (I.upperBound > Middle.lowerBound && I.upperBound <= Middle.upperBound)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Gibt den Interval aus dem Array intervals[] zurück, der am weitesten rechts liegt
-        /// </summary>
-        /// <returns></returns>
-        public Interval getRightMostInterval()
-        {
-            Interval rightMostInterval = intervals[0];
-            for (int i = 0; i < intervals.Length; i++)
-            {
-                if (rightMostInterval.upperBound < intervals[i].upperBound)
-                {
-                    rightMostInterval = intervals[i];
-                }
-            }
-            return rightMostInterval;
-        }
-
-        /// <summary>
-        /// Gibt den Interval aus dem Array intervals[] zurück, der am weitesten links liegt
-        /// </summary>
-        /// <returns></returns>
-        public Interval getLeftMostInterval()
-        {
-            Interval leftMostInterval = intervals[0];
-            for (int i = 0; i < intervals.Length; i++)
-            {
-                if (leftMostInterval.lowerBound > intervals[i].lowerBound)
-                {
-                    leftMostInterval = intervals[i];
-                }
-            }
-            return leftMostInterval;
-        }
-
-        /// <summary>
         /// Gibt den Intervall zurück, in welchem "zero" liegt
         /// </summary>
         /// <param name="zero"></param>
         /// <returns></returns>
         public Interval getInterval(double zero)
         {
-            Interval A;
-            if (zero < 0)
+            Interval I;
+            double newZero = Math.Floor(zero);
+            for (double i = newZero; i < newZero + 1; i += 0.5)
             {
-                double sw = -0.5;                       //Schrittweite
-                double upperBound = Middle.lowerBound;  //Startintervall
-                double lowerBound = upperBound + sw;    //Startintervall
-                A = searchInterval(lowerBound, upperBound, sw, zero); //Suche
-                return A;
-            }
-            else
-            {
-                double sw = 0.5;
-                double lowerBound = Middle.upperBound;
-                double upperBound = lowerBound + sw;
-                A = searchInterval(lowerBound, upperBound, sw, zero);
-                return A;
-            }
-        }
-
-        /// <summary>
-        /// Sucht den Interval in welchem "zero" liegt
-        /// </summary>
-        /// <param name="lb"></param>
-        /// <param name="ub"></param>
-        /// <param name="sw"></param>
-        /// <param name="zero"></param>
-        /// <returns></returns>
-        public Interval searchInterval(double lb, double ub, double sw, double zero)
-        {
-            Interval Error = new Interval(-1, 1);    //Falls ein Fehlerauftritt
-            int counter = 10000;                    //Damit notfalls abgebrochen wird
-            bool found = false;                     //Intervall gefunden?
-            while (found == false && counter != 0)  //Geht nach und nach von der Mitte[-30,30] Intervalle durch 
-            {                                       //Und schaut ob die "zero" drin ist
-                counter--;
-                if (zero >= lb && zero <= ub)
+                if (i <= zero && zero < i + 0.5)
                 {
-                    found = true;
-                    Interval I = new Interval(lb, ub);
-                    return I;
+                    I = new Interval(i, i + 0.5); return I;
                 }
-                lb += sw;
-                ub += sw;
+                else if (i < zero && zero <= i + 0.5)
+                {
+                    I = new Interval(i, i + 0.5); return I;
+                }
             }
-            return Error;
+            I = new Interval(-1, 1); return I; //Falls ein Fehler auftritt
         }
 
         /// <summary>
-        /// Überprüft die rechts-liegenden Intervalle
+        /// Überprüft die Intervalle, die rechts vom Intervall liegen, der als letztes auf der rechten Seite überprüft wurde
         /// </summary>
         public void checkRightIntervals()
         {   
             additionalVZWfound = false;             //Weiterer VZW gefunden?
-            Interval I = getRightMostInterval();    //Intervall ganz rechts außen
-
-            if (checkIfIntervalIsInMiddle(I) == true)   //Intervall ist in der Mitte?
-            {
-                double lowerSearchBound = Middle.upperBound;    //Es wird ab der Mitte gesucht
-                double upperSearchBound = lowerSearchBound + 20;
-                checkIntervals(lowerSearchBound, upperSearchBound);
-            }
-            else
-            {
-                double lowerSearchBound = I.upperBound; //Es wird ab der geundenen Nullstelle gesucht
-                double upperSearchBound = lowerSearchBound + 20;
-                checkIntervals(lowerSearchBound, upperSearchBound);
-            }
+            double lowerSearchBound = rightMostChecked;
+            double upperSearchBound = rightMostChecked + 20;
+            checkIntervals(lowerSearchBound, upperSearchBound);
+            rightMostChecked = upperSearchBound;
         }
 
         /// <summary>
-        /// Überprüft die links-liegenden Intervalle
+        /// Überprüft die Intervalle, die links vom Intervall liegen, der als letztes auf der linken Seite überprüft wurde
         /// </summary>
         public void checkLeftIntervals()
         {   //Analog check Left Intervals
             additionalVZWfound = false;
-            Interval I = getLeftMostInterval();
-
-            if (checkIfIntervalIsInMiddle(I) == true)
-            {
-                double upperSearchBound = Middle.lowerBound;
-                double lowerSearchBound = upperSearchBound - 20;
-                checkIntervals(lowerSearchBound, upperSearchBound);
-            }
-            else
-            {
-                double upperSearchBound = I.lowerBound;
-                double lowerSearchBound = upperSearchBound - 20;
-                checkIntervals(lowerSearchBound, upperSearchBound);
-            }
+            double upperSearchBound = leftMostChecked;
+            double lowerSearchBound = leftMostChecked - 20;
+            checkIntervals(lowerSearchBound, upperSearchBound);
+            leftMostChecked = lowerSearchBound;
         }
 
         /// <summary>
@@ -510,24 +450,28 @@ namespace Funktionsrechner_2._0
             double middle = I.getIntervallAverage();
 
             if (calculateYValue(middle) == 0) { addZero(middle); } //nullstelle schon gefunden
-            while (derivative.calculateYValue(middle) == 0) //Das Newton verfahren geht nicht bei Steigung = 0
+            while (derivative.calculateYValue(middle) == 0) //Das Newton verfahren funktioniert nicht bei Steigung = 0
             {
                 middle += 0.00001; //Verschiebeung des Startwerts, sodass Verfahren funktioniert
             }
 
-            estimate1 = middle;
+            estimate1 = middle; //Erster Schätzwert der Nullstelle ist die Intervallmitte
             int counter = 0;
             for (int i = 0; i < iterations; i++) 
             {
                 //berechnung nes nächsten Schätzwertes
-                estimate2 = estimate1 - (this.calculateYValue(estimate1) / derivative.calculateYValue(estimate1));
-                if (compareEstimates(estimate1, estimate2)) //Wenn beide die gleichen ersten vier nachkommaziffern haben
+                if (derivative.calculateYValue(estimate1) != 0) //Steigung des Graphen darf nicht 0 sein
                 {
-                    counter++;
-                    if (counter == 10) { return estimate1; }//Beide hatten 10 mal die gleichen ersten vier nachkommaziffern -> genau genug
+                    estimate2 = estimate1 - (this.calculateYValue(estimate1) / derivative.calculateYValue(estimate1));
+                    if (compareEstimates(estimate1, estimate2)) //Wenn beide die gleichen ersten vier nachkommaziffern haben
+                    {
+                        counter++;
+                        if (counter == 10) { return estimate1; }//Beide hatten 10 mal die gleichen ersten vier nachkommaziffern -> genau genug
+                    }
+                    else counter = 0;
+                    estimate1 = estimate2;
                 }
-                else counter = 0;
-                estimate1 = estimate2;
+                else estimate1 += 0.1; //Verschiebung, sodass das Verfahren weitermacht wenn es auf Steigung 0 trifft
             }
             return estimate1;
         }
@@ -539,6 +483,8 @@ namespace Funktionsrechner_2._0
         public override double[] calculateZeros()
         {
             int degree = getFunctionDegree();
+            rightMostChecked = Middle.upperBound;
+            leftMostChecked = Middle.lowerBound;
 
             // konstanter term wie f(x) = 5
             if (degree == 0)

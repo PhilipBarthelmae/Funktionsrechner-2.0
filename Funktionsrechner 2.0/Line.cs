@@ -6,6 +6,14 @@ using System.Threading.Tasks;
 
 namespace Funktionsrechner_2._0
 {
+    //########################################################################################################
+
+    //Diese Klasse stammt aus einer längst vergangenen Zeit, in der Geraden noch nicht über Polynomfunktionen
+    //geregelt wurden. Da ich aber nicht ausschließen kann, dass ich diese Klase noch gebrauchen könnte,
+    //da ich noch freizeitlich daran weiterprogrammieren will, lasse ich sie im Prjekt drin.
+
+    //########################################################################################################
+
     //class Line:Function
     //{
 
