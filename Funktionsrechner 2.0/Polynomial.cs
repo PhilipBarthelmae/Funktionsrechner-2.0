@@ -299,30 +299,6 @@ namespace Funktionsrechner_2._0
         //GFS-Relevant
         #region GFS
 
-        //TODO: noch mal drüberscheunen
-
-        ///// <summary>
-        ///// Überprüft ob das Interval schon gefunden wurde
-        ///// </summary>
-        ///// <param name="lb"></param>
-        ///// <param name="ub"></param>
-        ///// <returns></returns>
-        //public bool checkIntervalAlreadyFound(double lb, double ub)
-        //{ //ub = upperBound & lb = lowerBound
-        //    Interval I = new Interval(lb, ub);
-        //    for (int i = 0; i < intervals.Length; i++)
-        //    {
-        //        if (I.lowerBound == intervals[i].lowerBound)
-        //        {
-        //            if (I.upperBound == intervals[i].upperBound)
-        //            {
-        //                return true;
-        //            }
-        //        }
-        //    }
-        //    return false;
-        //}
-
         /// <summary>
         /// Gibt den Grad der Polynomfunktion zurück
         /// </summary>
@@ -385,7 +361,7 @@ namespace Funktionsrechner_2._0
         /// Überprüft die Intervalle, die links vom Intervall liegen, der als letztes auf der linken Seite überprüft wurde
         /// </summary>
         public void checkLeftIntervals()
-        {   //Analog check Left Intervals
+        {   //Analog check Right Intervals
             additionalVZWfound = false;
             double upperSearchBound = leftMostChecked;
             double lowerSearchBound = leftMostChecked - 20;
@@ -417,7 +393,8 @@ namespace Funktionsrechner_2._0
         /// <param name="x2"></param>
         /// <returns></returns>
         public bool checkVZW(double x1, double x2)
-        {
+        {   
+            //Überprüft ein Intervall auf VZW
             double y1 = calculateYValue(x1);
             double y2 = calculateYValue(x2);
             if (y1 <= 0 && y2 >= 0) { return true; }
@@ -433,7 +410,8 @@ namespace Funktionsrechner_2._0
         /// <returns></returns>
         public bool compareEstimates(double e1, double e2)
         {
-            e1 = Math.Truncate(e1 * 10000) / 10000;
+            //Kürzng des Wertes auf 4 nachkommastellen
+            e1 = Math.Truncate(e1 * 10000) / 10000; 
             e2 = Math.Truncate(e2 * 10000) / 10000;
             if (e1 == e2) { return true; }
             else { return false; }
@@ -447,10 +425,10 @@ namespace Funktionsrechner_2._0
         /// <returns></returns>
         public double NewtonAlgorithm(Interval I, int iterations)
         {
-            Function derivative = this.createDerivative();
-            double estimate1; // Eine schätzung der Nullstelle
+            Function derivative = this.createDerivative(); //erste Ableitung der Funktion
+            double estimate1; // Eine Schätzung der Nullstelle
             double estimate2; // Eine bessere Schätzung der nullstelle, die aus der ersten hervorgeht
-            double middle = I.getIntervallAverage();
+            double middle = I.getIntervallAverage(); //Findet Intervallmitte
 
             if (calculateYValue(middle) == 0) { addZero(Math.Round(middle,roundDigits)); } //nullstelle schon gefunden
             while (derivative.calculateYValue(middle) == 0) //Das Newton verfahren funktioniert nicht bei Steigung = 0
@@ -459,12 +437,13 @@ namespace Funktionsrechner_2._0
             }
 
             estimate1 = middle; //Erster Schätzwert der Nullstelle ist die Intervallmitte
-            int counter = 0;
+            int counter = 0;    //zählt wie oft beide Schätzwerte gleich waren
             for (int i = 0; i < iterations; i++) 
             {
-                //berechnung nes nächsten Schätzwertes
+                //Berechnung nes nächsten Schätzwertes
                 if (derivative.calculateYValue(estimate1) != 0) //Steigung des Graphen darf nicht 0 sein
                 {
+                    //Berechnung der nächsten Schätzung
                     estimate2 = estimate1 - (this.calculateYValue(estimate1) / derivative.calculateYValue(estimate1));
                     if (compareEstimates(estimate1, estimate2)) //Wenn beide die gleichen ersten vier nachkommaziffern haben
                     {
@@ -485,15 +464,14 @@ namespace Funktionsrechner_2._0
         /// <returns></returns>
         public override double[] calculateZeros()
         {
-            int degree = getFunctionDegree();
-            rightMostChecked = Middle.upperBound;
-            leftMostChecked = Middle.lowerBound;
+            int degree = getFunctionDegree();       //Grad der Funktion
+            rightMostChecked = Middle.upperBound;   //Letzter überprüfter Intervall rechts
+            leftMostChecked = Middle.lowerBound;    //Letzter überprüfter Intervall links
 
-            // konstanter term wie f(x) = 5
+            // konstanter Term wie f(x) = 5
             if (degree == 0)
             {
-                //hier
-                return zeros;
+                return zeros;   //Hat keine Nullstellen
             }
 
             //  linie wie f(x) = 3x + 5
@@ -501,8 +479,8 @@ namespace Funktionsrechner_2._0
             {
                 double a = parameters[0];
                 double b = parameters[1];
-                double zero = (-b) / a;
-                addZero(Math.Round(zero, roundDigits));
+                double zero = (-b) / a; //Berechnung Nullstelle
+                addZero(Math.Round(zero, roundDigits)); //Speichern der Nullstelle im Array
                 return zeros;
             }
 
@@ -517,12 +495,13 @@ namespace Funktionsrechner_2._0
 
                 //abc-Formel
                 zero1 = (-b + Math.Sqrt(Math.Pow(b, 2) - (4 * a * c))) / (2 * a);
+                //Nullstelle muss eine Zahl sein (Bei negativer Diskriminante nicht der Fall)
                 if (zero1 <= 0 || zero1 > 0) addZero(Math.Round(zero1, roundDigits));
                 zero2 = (-b - Math.Sqrt(Math.Pow(b, 2) - (4 * a * c))) / (2 * a);
-                if (zero2 != zero1)
-                {
+                if (zero2 != zero1) 
+                {   //Nullstelle muss eine Zahl sein 
                     if (zero2 <= 0 || zero2 > 0) addZero(Math.Round(zero2, roundDigits));
-                }
+                }   
                 return zeros;
             }
 
@@ -530,12 +509,12 @@ namespace Funktionsrechner_2._0
             else 
             {
                 // Überprüfung der Mitte [-30,30]
-                bool VZWfound = false;
+                bool VZWfound = false;  //Vorzeichenwechsel gefunden
                 for (double i = Middle.lowerBound ; i < Middle.upperBound; i += 0.25)
-                {
+                {   //Vorzeichenwechsel im Intervall gefunden?
                     if (checkVZW(i, i + 0.25) == true)
                     {
-                        addIntervallEntry(i, i + 0.25);
+                        addIntervallEntry(i, i + 0.25); //Intervall merken
                         VZWfound = true;
                     }
                 }
@@ -558,23 +537,24 @@ namespace Funktionsrechner_2._0
                 //der Newton Methode nach einer gesucht
                 else 
                 {
-                    Interval Start = new Interval(-0.5 ,0.5);
+                    Interval Start = new Interval(-0.5 ,0.5); //Startpunkt der Suche
                     double zero;
-                    zero = NewtonAlgorithm(Start, 200);
+                    zero = NewtonAlgorithm(Start, 200); //Suche starten
                     double YAtZero; //der Funktionswert an der stelle "zero"
-                    YAtZero = calculateYValue(zero);
+                    YAtZero = calculateYValue(zero); //Y-Wert des Ergebnisses der Suche berechnen
                     YAtZero = Math.Abs(YAtZero);
-                    if(YAtZero < 0.1)
+                    if(YAtZero < 0.1) //Ein Y-Wert < 0,1 geht als gefundene Nulstelle durch
                     {
                         VZWfound = true;
-                        Interval I = getInterval(zero);
-                        //wenn ein fehler aufgetreten ist
+                        Interval I = getInterval(zero); //Finden des Intervalls der Nullstelle
+                        //wenn ein Fehler aufgetreten ist
                         if (I.lowerBound == -1 && I.upperBound == 1) return zeros; 
-                        addIntervallEntry(I.lowerBound, I.upperBound);
-                        rightMostChecked = I.upperBound;
-                        leftMostChecked = I.lowerBound;
+                        addIntervallEntry(I.lowerBound, I.upperBound); //Intervall merken
+                        //Setzen der Anfangswerte für die Suche links und rechts der Nullstelle
+                        rightMostChecked = I.upperBound;    
+                        leftMostChecked = I.lowerBound;     
                         do
-                        {
+                        {   //gleiches Verfahren wie vorher
                             checkRightIntervals();
                         } while (additionalVZWfound);
                         do
@@ -583,7 +563,7 @@ namespace Funktionsrechner_2._0
                         } while (additionalVZWfound);
                     }
                 }
-                //evaluierung der gesmmelten Intervalle
+                //Evaluierung der gesmmelten Intervalle
                 if (intervals.Length > 0)
                 {
                     for (int i = 0; i < intervals.Length; i++)

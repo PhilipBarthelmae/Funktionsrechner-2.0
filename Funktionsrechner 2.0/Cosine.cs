@@ -50,18 +50,19 @@ namespace Funktionsrechner_2._0
         public override string printFunction()
         {
             //Kosinuskurve: a cos(b(x-c))+d
-            a = Math.Round(a, 2);
-            b = Math.Round(b, 2);
-            c = Math.Round(c, 2);
-            d = Math.Round(d, 2);
+            double a = Math.Round(this.a, 2);
+            double b = Math.Round(this.b, 2);
+            double c = Math.Round(this.c, 2);
+            double d = Math.Round(this.d, 2);
             string function = Convert.ToString(name) + "(x)= ";
-            if (a != 1)
+            if (a != 1 && a != -1)
             {
                 function += Convert.ToString(a) + " cos(";
             }
             else
             {
-                function += "cos(";
+                if (a == 1) function += "cos(";
+                else function += "- cos(";
             }
             if (c == 0)
             {
@@ -76,25 +77,30 @@ namespace Funktionsrechner_2._0
             }
             else
             {
-                function += Convert.ToString(b) + "(x";
+                if (b == 1) function += "x ";
+                else function += Convert.ToString(b) + "(x ";
             }
             if (c > 0)
             {
-                function += "-" + Convert.ToString(c) + "))";
+                if (b == 1) function += "- " + Convert.ToString(c) + ")";
+                else function += "- " + Convert.ToString(c) + "))";
             }
             else if (c < 0)
             {
-                function += "+" + Convert.ToString(Math.Abs(c)) + "))";
+                double cNew = Math.Abs(c);
+                if (b == 1) function += "+ " + Convert.ToString(cNew) + ")";
+                else function += "+ " + Convert.ToString(cNew) + "))";
             }
             if (d != 0)
             {
                 if (d > 0)
                 {
-                    function += "+" + Convert.ToString(d);
+                    function += " + " + Convert.ToString(d);
                 }
                 else
                 {
-                    function += Convert.ToString(d);
+                    double dNew = Math.Abs(d);
+                    function += " - " + Convert.ToString(dNew);
                 }
                 if (checkIfBigLetter(name))
                 {
@@ -182,8 +188,8 @@ namespace Funktionsrechner_2._0
                 if (d < 0)
                 {
                     double dAbs = Math.Abs(d);
-                    if (d < a ) return 2;
-                    if (d == a)  return 2;
+                    if (dAbs < a ) return 2;
+                    if (dAbs == a)  return 2;
                     else return 0;
                 }
                 return 2; //d == 0
@@ -192,26 +198,26 @@ namespace Funktionsrechner_2._0
             {
                 if (d > 0)
                 {
-                    if (d < a) return 2;
-                    if (d == a)  return 2; 
+                    double aAbs = Math.Abs(a);
+                    if (d < aAbs) return 2;
+                    if (d == aAbs)  return 2; 
                     else return 0;
                 }
                 if (d < 0)
                 {
                     double dAbs = Math.Abs(d);
-                    if (d < a) return 2;
-                    if (d == a) return 1;
+                    double aAbs = Math.Abs(a);
+                    if (dAbs < aAbs) return 2;
+                    if (dAbs == aAbs) return 1;
                     else return 0;
                 }
                 return 2; //d == 0
             }
-
-            
         }
 
         public override double[] calculateZeros()
         {
-            int limit = 200;
+            int limit = 1000;
             double zero1;   //nullstelle1
             double zero2;   //Nullstelle2
             double period = 2 * Math.PI / Math.Abs(b);
@@ -220,9 +226,12 @@ namespace Funktionsrechner_2._0
             if (checkZerosThere() == 2)
             {
                 zero1 = ((1 / b) * Math.Acos(-d / a));  //c=0 gesetzt
+                if (zero1 < 0) zero1 += period;
                 zero2 = period - zero1;         //Ausnutzen der Symmetrie der Nullstellen zur Periode
-                distance = zero2 - zero1;   
-                zero1 = ((1 / b) * Math.Acos(-d / a)) + c;  //c auf ausgangswert zurückgesetzt
+                distance = Math.Abs(zero2 - zero1);
+                if (distance > period) distance -= period;
+                //zero1 = ((1 / b) * Math.Acos(-d / a)) + c;  //c auf ausgangswert zurückgesetzt
+                zero1 = zero1 + c;  //c auf ausgangswert zurückgesetzt
                 zero1 = hopping(zero1, period, ref limit);  //Solange springen bis die Nullstelle innerhalb der ersten Periode gefunden wurde
                 if (limit == 0)
                 {

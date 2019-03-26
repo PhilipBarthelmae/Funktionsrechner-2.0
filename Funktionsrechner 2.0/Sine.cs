@@ -50,18 +50,19 @@ namespace Funktionsrechner_2._0
         public override string printFunction()
         {
             //Sinuskurve: a sin(b(x-c))+d
-            a = Math.Round(a, 2);
-            b = Math.Round(b, 2);
-            c = Math.Round(c, 2);
-            d = Math.Round(d, 2);
+            double a = Math.Round(this.a, 2);
+            double b = Math.Round(this.b, 2);
+            double c = Math.Round(this.c, 2);
+            double d = Math.Round(this.d, 2);
             string function = Convert.ToString(name) + "(x)= ";
-            if (a != 1)
+            if (a != 1 && a != -1)
             {
                 function += Convert.ToString(a) + " sin(";
             }
             else
             {
-                function += "sin(";
+                if (a == 1) function += "sin(";
+                else function += "- sin(";
             }
             if (c == 0)
             {
@@ -76,26 +77,30 @@ namespace Funktionsrechner_2._0
             }
             else
             {
-                function += Convert.ToString(b) + "(x";
+                if (b == 1) function += "x ";
+                else function += Convert.ToString(b) + "(x ";
             }
             if (c > 0)
             {
-                function += "-" + Convert.ToString(c) + "))";
+                if (b == 1) function += "- " + Convert.ToString(c) + ")";
+                else function += "- " + Convert.ToString(c) + "))";
             }
             else if (c < 0)
             {
                 double cNew = Math.Abs(c);
-                function += "+" + Convert.ToString(cNew) + "))";
+                if (b == 1) function += "+ " + Convert.ToString(cNew) + ")";
+                else function += "+ " + Convert.ToString(cNew) + "))";
             }
             if (d != 0)
             {
                 if (d > 0)
                 {
-                    function += "+" + Convert.ToString(d);
+                    function += " + " + Convert.ToString(d);
                 }
                 else
                 {
-                    function += Convert.ToString(d);
+                    double dNew = Math.Abs(d);
+                    function += " - " + Convert.ToString(dNew);
                 }
                 if (checkIfBigLetter(name))
                 {
@@ -170,7 +175,7 @@ namespace Funktionsrechner_2._0
         /// <returns></returns>
         public override double[] calculateZeros()
         {
-            int limit = 200;
+            int limit = 1000;
             double period = 2 * Math.PI / Math.Abs(b);
             double shift = period/4;
             double[] newParameters = new double[4];
@@ -187,6 +192,7 @@ namespace Funktionsrechner_2._0
                 zeros[i] = Math.Round(zeros[i], roundDigits);
             }
             if (limit == 0) { zeros = new double[0]; return zeros; }
+            Array.Sort(zeros);
             return zeros;
         }
 
