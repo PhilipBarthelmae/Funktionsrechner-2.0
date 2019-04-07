@@ -378,7 +378,7 @@ namespace Funktionsrechner_2._0
         {
             for (double i = lb; i < ub; i += 0.5)
             {
-                if (checkVZW(i, i + 0.5) == true) // && checkIntervalAlreadyFound(i, i + 0.5) == false
+                if (checkVZW(i, i + 0.5) == true) 
                 {
                     addIntervallEntry(i, i + 0.5);
                     additionalVZWfound = true;
@@ -459,7 +459,7 @@ namespace Funktionsrechner_2._0
         }
 
         /// <summary>
-        /// Berechnet die Nullstellen der Funktion 
+        /// Berechnet die Nullstellen der Funktion und gibt sie als Array zurück
         /// </summary>
         /// <returns></returns>
         public override double[] calculateZeros()
@@ -522,12 +522,12 @@ namespace Funktionsrechner_2._0
                 //Wenn im Intervall [-30,30] Nullstellen gefuden wurden, wird dort weitergesucht
                 if (VZWfound == true)
                 {
-                    do  //Durchsuchen der nächsten 40 Teilintervalle (positiv) mit delta x = 0,5
+                    do  //Durchsuchen der nächsten 40 Teilintervalle (positiv) mit länge = 0,5
                     {   //wenn ein eine Nullstelle gefunden wurde 
                         checkRightIntervals();
                     } while (additionalVZWfound);
 
-                    do  //Durchsuchen der nächsten 40 Teilintervalle (negativ) mit delta x = 0,5
+                    do  //Durchsuchen der nächsten 40 Teilintervalle (negativ) mit länge = 0,5
                     {   //wenn ein eine Nullstelle gefunden wurde 
                         checkLeftIntervals();
                     } while (additionalVZWfound);
