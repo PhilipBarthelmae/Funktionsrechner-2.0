@@ -430,7 +430,7 @@ namespace Funktionsrechner_2._0
             double estimate2; // Eine bessere Schätzung der nullstelle, die aus der ersten hervorgeht
             double middle = I.getIntervallAverage(); //Findet Intervallmitte
 
-            if (calculateYValue(middle) == 0) { addZero(Math.Round(middle,roundDigits)); } //nullstelle schon gefunden
+            if (calculateYValue(middle) == 0) { return middle; } //nullstelle schon gefunden
             while (derivative.calculateYValue(middle) == 0) //Das Newton verfahren funktioniert nicht bei Steigung = 0
             {
                 middle += 0.00001; //Verschiebeung des Startwerts, sodass Verfahren funktioniert
@@ -576,5 +576,6 @@ namespace Funktionsrechner_2._0
             }
         }
         #endregion
+        
     }
 }
